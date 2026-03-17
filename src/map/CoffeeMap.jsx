@@ -24,22 +24,27 @@ function MapWatcher({ onMove }) {
   return null;
 }
 
+const SF_POLYGON = [
+  [-122.52, 37.7],
+  [-122.35, 37.7],
+  [-122.35, 37.83],
+  [-122.52, 37.83],
+  [-122.52, 37.7],
+];
+
+const MIN_RESOLUTION = 5;
+const MAX_RESOLUTION = 10;
+
 export default function CoffeeMap() {
   const [mounted, setMounted] = useState(false);
   const [hexes, setHexes] = useState([]);
   const [cafes, setCafes] = useState([]);
+  const [resolution, setResolution] = useState(8);
+  const [lastBounds, setLastBounds] = useState(SF_POLYGON);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const sfPolygon = [
-        [-122.52, 37.70],
-        [-122.35, 37.70],
-        [-122.35, 37.83],
-        [-122.52, 37.83],
-        [-122.52, 37.70]
-    ];
 
   useEffect(() => {
     let cancelled = false;
@@ -49,15 +54,6 @@ export default function CoffeeMap() {
         const data = await fetchCoffeeShops();
         if (cancelled) return;
         setCafes(data);
-
-        const resolution = 9;
-        const counts = aggregateHexes(data, resolution);
-        const gridCells = generateCityHexGrid(sfPolygon, resolution);
-        const hexData = gridCells.map((cell) => ({
-          polygon: hexToPolygon(cell),
-          count: counts[cell] || 0,
-        }));
-        setHexes(hexData);
       } catch (err) {
         console.error("Failed to load coffee shops:", err);
       }
@@ -67,22 +63,21 @@ export default function CoffeeMap() {
     return () => { cancelled = true; };
   }, []);
 
-  function updateHexes(polygon) {
+  useEffect(() => {
     if (!cafes.length) return;
 
-        const resolution = 8;
+    const counts = aggregateHexes(cafes, resolution);
+    const gridCells = generateCityHexGrid(lastBounds, resolution);
+    const hexData = gridCells.map((cell) => ({
+      polygon: hexToPolygon(cell),
+      count: counts[cell] || 0,
+    }));
+    setHexes(hexData);
+  }, [cafes, resolution, lastBounds]);
 
-        const counts = aggregateHexes(cafes, resolution);
-
-        const gridCells = generateCityHexGrid(polygon, resolution);
-
-        const hexData = gridCells.map(cell => ({
-            polygon: hexToPolygon(cell),
-            count: counts[cell] || 0
-        }));
-
-        setHexes(hexData);
-    }
+  function handleMapMove(polygon) {
+    setLastBounds(polygon);
+  }
 
   function getColor(count) {
         if (count === 0) return "#eeeeee";
@@ -102,19 +97,35 @@ export default function CoffeeMap() {
   }
 
   return (
-    <MapContainer
-      center={[37.7749, -122.4194]}
-      zoom={12}
-      style={{ height: "600px", width: "100%" }}
-      className="coffee-map"
-    >
-
-      <TileLayer
+    <div className="coffee-map-wrapper">
+      <div className="resolution-control">
+        <label htmlFor="resolution-slider">
+          Hex resolution: <strong>{resolution}</strong>
+          <span className="resolution-hint">
+            ({MIN_RESOLUTION} = larger hexagons, {MAX_RESOLUTION} = smaller)
+          </span>
+        </label>
+        <input
+          id="resolution-slider"
+          type="range"
+          min={MIN_RESOLUTION}
+          max={MAX_RESOLUTION}
+          value={resolution}
+          onChange={(e) => setResolution(Number(e.target.value))}
+        />
+      </div>
+      <MapContainer
+        center={[37.7749, -122.4194]}
+        zoom={12}
+        style={{ height: "600px", width: "100%" }}
+        className="coffee-map"
+      >
+        <TileLayer
         attribution="© OpenStreetMap"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
-      <MapWatcher onMove={updateHexes} />
+      <MapWatcher onMove={handleMapMove} />
 
       {hexes.map((h, i) => (
         <Polygon
@@ -127,7 +138,7 @@ export default function CoffeeMap() {
         />
       ))}
 
-    </MapContainer>
-
+      </MapContainer>
+    </div>
   );
 }
