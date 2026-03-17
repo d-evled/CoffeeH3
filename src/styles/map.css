@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+h1 {
+  text-align: center;
+}
+
+/* Leaflet map container needs explicit dimensions */
+.coffee-map,
+.leaflet-container {
+  height: 600px;
+  width: 100%;
+  z-index: 0;
+}
