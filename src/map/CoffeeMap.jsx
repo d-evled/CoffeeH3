@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Polygon, Tooltip, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Polygon, Popup, Tooltip, useMapEvents } from "react-leaflet";
 
 import { fetchCoffeeShops } from "../services/overpass";
-import { aggregateHexes, hexToPolygon, generateCityHexGrid } from "../utils/h3Utils";
+import { aggregateHexes, groupPointsByHex, hexToPolygon, generateCityHexGrid } from "../utils/h3Utils";
 
 function MapWatcher({ onMove }) {
   useMapEvents({
@@ -67,11 +67,13 @@ export default function CoffeeMap() {
     if (!cafes.length) return;
 
     const counts = aggregateHexes(cafes, resolution);
+    const cafesByCell = groupPointsByHex(cafes, resolution);
     const gridCells = generateCityHexGrid(lastBounds, resolution);
     const hexData = gridCells.map((cell) => ({
       id: cell,
       polygon: hexToPolygon(cell),
       count: counts[cell] || 0,
+      cafes: cafesByCell[cell] || [],
     }));
     setHexes(hexData);
   }, [cafes, resolution, lastBounds]);
@@ -142,6 +144,22 @@ export default function CoffeeMap() {
             <br />
             <strong>Coffee shops</strong>: {h.count}
           </Tooltip>
+          <Popup className="hex-popup">
+            <div className="hex-popup-content">
+              <strong>Hex ID</strong>: {h.id}
+              <br />
+              <strong>Coffee shops ({h.count})</strong>
+              {h.cafes.length > 0 ? (
+                <ul className="hex-cafe-list">
+                  {h.cafes.map((cafe, i) => (
+                    <li key={i}>{cafe.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="hex-cafe-empty">No coffee shops in this hex</p>
+              )}
+            </div>
+          </Popup>
         </Polygon>
       ))}
 

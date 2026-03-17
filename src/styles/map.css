@@ -61,3 +61,37 @@ h1 {
 .hex-tooltip strong {
   font-weight: 600;
 }
+
+/* Hex click popup with cafe list */
+.hex-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.hex-popup-content {
+  font-size: 13px;
+  margin: 0;
+}
+
+.hex-popup-content strong {
+  font-weight: 600;
+}
+
+.hex-cafe-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.hex-cafe-list li {
+  margin-bottom: 4px;
+}
+
+.hex-cafe-empty {
+  margin: 8px 0 0;
+  color: var(--text);
+  opacity: 0.8;
+  font-style: italic;
+}
