@@ -50,3 +50,14 @@ h1 {
   accent-color: var(--accent, #aa3bff);
   cursor: pointer;
 }
+
+/* Hex hover tooltip */
+.hex-tooltip {
+  font-size: 12px;
+  padding: 8px 10px;
+  max-width: 260px;
+}
+
+.hex-tooltip strong {
+  font-weight: 600;
+}

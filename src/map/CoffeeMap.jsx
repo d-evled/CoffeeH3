@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Polygon, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Polygon, Tooltip, useMapEvents } from "react-leaflet";
 
 import { fetchCoffeeShops } from "../services/overpass";
 import { aggregateHexes, hexToPolygon, generateCityHexGrid } from "../utils/h3Utils";
@@ -69,6 +69,7 @@ export default function CoffeeMap() {
     const counts = aggregateHexes(cafes, resolution);
     const gridCells = generateCityHexGrid(lastBounds, resolution);
     const hexData = gridCells.map((cell) => ({
+      id: cell,
       polygon: hexToPolygon(cell),
       count: counts[cell] || 0,
     }));
@@ -127,15 +128,21 @@ export default function CoffeeMap() {
       
       <MapWatcher onMove={handleMapMove} />
 
-      {hexes.map((h, i) => (
+      {hexes.map((h) => (
         <Polygon
-          key={i}
+          key={h.id}
           positions={h.polygon}
           pathOptions={{
             color: getColor(h.count),
             fillOpacity: 0.6
           }}
-        />
+        >
+          <Tooltip direction="top" offset={[0, -10]} opacity={0.95} className="hex-tooltip">
+            <strong>Hex ID</strong>: {h.id}
+            <br />
+            <strong>Coffee shops</strong>: {h.count}
+          </Tooltip>
+        </Polygon>
       ))}
 
       </MapContainer>
